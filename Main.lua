@@ -10,10 +10,11 @@ _inputFileName = arg [1]
 _outputHeaderFileName = arg [2]
 _outputObjectFileName = arg [3]
 _outputBindingsObjectFileName = arg [4]
-if _inputFileName == nil or _outputHeaderFileName == nil or _outputObjectFileName == nil or _outputBindingsObjectFileName == nil then
+if _inputFileName == nil or _outputHeaderFileName == nil or _outputObjectFileName == nil then
     Log ("Incorrect input arguments!\nExpected arguments:\n1th -- input file name,\n"..
         "2th -- output header file name,\n3th -- output C++ object file name,\n" ..
-        "4th -- output bindings C++ file name!");
+        "4th (optional) -- output bindings C++ file name,\n" ..
+        "5th (optional) -- log output file name!");
     return 1
 end
 
@@ -31,8 +32,10 @@ else
 end
 
 Log ("Input scaffold: " .. _inputFileName .. "\nOutput header: " .. _outputHeaderFileName ..
-    "\nOutput object: " .. _outputObjectFileName ..
-    "\nOutput bindings: " .. _outputBindingsObjectFileName)
+    "\nOutput object: " .. _outputObjectFileName)
+if _outputBindingsObjectFileName ~= nil then
+    Log ("Output bindings: " .. _outputBindingsObjectFileName)
+end
 Log ("WARNING: Currently, only one level Urho3D arrays are supported!")
 
 -- Load files
@@ -41,9 +44,9 @@ _objectFile = io.open (_outputObjectFileName, "w+")
 
 -- If output binding file name starts with "ASBindGenCommand=", detect it as ASBindGen command name
 -- and write ASBindGen comments instead of bindings object.
-if _outputBindingsObjectFileName:find ("ASBindGenCommand=") == 1 then
+if _outputBindingsObjectFileName ~= nil and _outputBindingsObjectFileName:find ("ASBindGenCommand=") == 1 then
     _asBindGenCommand = _outputBindingsObjectFileName:sub (("ASBindGenCommand="):len () + 1, _outputBindingsObjectFileName:len ())
-else
+elseif _outputBindingsObjectFileName ~= nil then
     _bindingsFile = io.open (_outputBindingsObjectFileName, "w+")
 end
 
@@ -76,7 +79,7 @@ for readedLine in io.lines (_inputFileName) do
             ProcessObjectLine (readedLine)
         end
 
-    elseif _processMode == "Bindings" and _asBindGenCommand == nil then
+    elseif _processMode == "Bindings" and _asBindGenCommand == nil and _bindingsFile ~= nil then
         UpdateProcessMode (readedLine, false)
         if _processMode == "Bindings" then
             ProcessBindingsLine (readedLine)
